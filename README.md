@@ -1,6 +1,7 @@
 # SmartAttend
 
 SmartAttend 📊✅
+
 Welcome to SmartAttend, the cutting-edge biometric attendance solution! 🎯💻🔒
 
 Key Features ✨📈
