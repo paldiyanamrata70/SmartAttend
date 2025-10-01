@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAttend - Biometric Attendance System</title>
+    <meta name="description" content="Advanced biometric attendance system with face recognition, QR code scanning, and real-time analytics">
+    <meta name="author" content="SmartAttend">
+
+    <meta property="og:title" content="SmartAttend - Biometric Attendance System">
+    <meta property="og:description" content="Advanced biometric attendance system with face recognition, QR code scanning, and real-time analytics">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@lovable_dev">
+    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png">
+
+    <!-- External Libraries -->
+    <script src="https://unpkg.com/qr-scanner@1.4.2/qr-scanner.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2/dist/transformers.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" class="min-h-screen">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen active">
+            <div class="container">
+                <!-- Hero Section -->
+                <div class="hero-section">
+                    <h1 class="hero-title">SmartAttend</h1>
+                    <p class="hero-subtitle">Advanced biometric attendance system with face recognition and ID scanning</p>
+                    <div class="hero-features">
+                        <div class="feature-badge">
+                            <span class="feature-icon">🛡️</span>
+                            <span>Secure</span>
+                        </div>
+                        <span class="feature-separator">•</span>
+                        <div class="feature-badge">
+                            <span class="feature-icon">⏰</span>
+                            <span>Real-time</span>
+                        </div>
+                        <span class="feature-separator">•</span>
+                        <div class="feature-badge">
+                            <span class="feature-icon">📱</span>
+                            <span>Multi-modal</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Cards -->
+                <div class="action-cards">
+                    <div class="action-card" onclick="switchMode('mark-attendance')">
+                        <div class="action-card-header">
+                            <div class="action-icon success">
+                                <span>✓</span>
+                            </div>
+                            <h2>Mark Attendance</h2>
+                        </div>
+                        <div class="action-card-content">
+                            <p>Clock in/out using face recognition or ID scanning</p>
+                            <button class="btn btn-success">Start Check-in</button>
+                        </div>
+                    </div>
+
+                    <div class="action-card" onclick="switchMode('register')">
+                        <div class="action-card-header">
+                            <div class="action-icon camera">
+                                <span>👤</span>
+                            </div>
+                            <h2>Register New User</h2>
+                        </div>
+                        <div class="action-card-content">
+                            <p>Register your biometric data for future attendance</p>
+                            <button class="btn btn-camera">Register Face</button>
+                        </div>
+                    </div>
+
+                    <div class="action-card" onclick="switchMode('dashboard')">
+                        <div class="action-card-header">
+                            <div class="action-icon primary">
+                                <span>📊</span>
+                            </div>
+                            <h2>View Dashboard</h2>
+                        </div>
+                        <div class="action-card-content">
+                            <p>Monitor attendance records and analytics</p>
+                            <button class="btn btn-primary">Open Dashboard</button>
+                        </div>
+                    </div>
+
+                    <div class="action-card" onclick="switchMode('my-attendance')">
+                        <div class="action-card-header">
+                            <div class="action-icon info">
+                                <span>📅</span>
+                            </div>
+                            <h2>My Attendance</h2>
+                        </div>
+                        <div class="action-card-content">
+                            <p>View your monthly attendance history</p>
+                            <button class="btn btn-info">View History</button>
+                        </div>
+                    </div>
+
+                    <div class="action-card" onclick="switchMode('generate-qr')">
+                        <div class="action-card-header">
+                            <div class="action-icon primary">
+                                <span>📱</span>
+                            </div>
+                            <h2>Generate QR Code</h2>
+                        </div>
+                        <div class="action-card-content">
+                            <p>Generate unique QR codes for users</p>
+                            <button class="btn btn-primary">Generate QR</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features Grid -->
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-emoji">👤</div>
+                        <h3>Face Recognition</h3>
+                        <p>AI-powered facial authentication</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-emoji">📱</div>
+                        <h3>QR Code Scanning</h3>
+                        <p>Quick mobile-based check-in</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-emoji">💳</div>
+                        <h3>ID Card Reader</h3>
+                        <p>Traditional card-based access</p>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-emoji">📊</div>
+                        <h3>Real-time Analytics</h3>
+                        <p>Live attendance monitoring</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authentication Screen -->
+        <div id="auth-screen" class="screen">
+            <div class="container">
+                <div class="auth-header">
+                    <button class="btn-back" onclick="switchMode('home')">← Back to Home</button>
+                    <h2 id="auth-title">Mark Your Attendance</h2>
+                    <p id="auth-subtitle">Choose your preferred authentication method</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs-container">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('face')">👤 Face Recognition</button>
+                        <button class="tab" onclick="switchTab('id')">📱 ID Scanning</button>
+                    </div>
+
+                    <!-- Face Recognition Tab -->
+                    <div id="face-tab" class="tab-content active">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 id="face-title">Face Authentication</h3>
+                                <p id="face-subtitle">Look at the camera to mark attendance</p>
+                                <div class="camera-instructions" style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                                    <strong>Instructions:</strong> Click "Start Camera", allow camera permissions, then click "Detect" when your face is visible.
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="camera-container">
+                                    <div id="camera-preview" class="camera-preview hidden">
+                                        <video id="video-element" autoplay playsinline muted></video>
+                                        <div id="detection-overlay" class="detection-overlay hidden">
+                                            <div class="detection-content">
+                                                <div class="spinner"></div>
+                                                <p>Detecting Face...</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="camera-placeholder" class="camera-placeholder">
+                                        <span class="camera-icon">📷</span>
+                                        <div class="camera-permission-info">
+                                            <p><strong>Camera Required</strong></p>
+                                            <p>Click "Start Camera" and allow permissions when prompted</p>
+                                            <p style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                                                🔒 If blocked, click the camera icon in your browser's address bar
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div id="captured-image" class="captured-image hidden">
+                                        <img id="face-capture" alt="Captured face">
+                                        <div id="face-result" class="face-result hidden">
+                                            <div class="result-content">
+                                                <span id="result-icon"></span>
+                                                <p id="result-text"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <canvas id="capture-canvas" style="display: none;"></canvas>
+                                </div>
+                                <div class="camera-controls">
+                                     <button id="start-camera" class="btn btn-camera" onclick="startCamera()">
+                                         📷 Start Camera
+                                     </button>
+                                     <button id="capture-face" class="btn btn-success hidden" onclick="captureAndDetect()">
+                                         📷 Detect
+                                     </button>
+                                     <button id="reset-capture" class="btn btn-outline hidden" onclick="resetCapture()">
+                                         🔄
+                                     </button>
+                                 </div>
+
+                                 <!-- User Details Input -->
+                                 <div id="user-details-input" class="user-details-input hidden">
+                                     <h3>Enter Your Details</h3>
+                                     <div class="input-group">
+                                         <input type="text" id="user-name" placeholder="Enter your name" class="input-field">
+                                     </div>
+                                     <div class="input-group">
+                                         <input type="text" id="user-face-id" placeholder="Enter your face ID" class="input-field">
+                                     </div>
+                                     <button id="confirm-attendance" class="btn btn-success">
+                                         ✅ Confirm Attendance
+                                     </button>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+
+                    <!-- ID Scanning Tab -->
+                    <div id="id-tab" class="tab-content">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Scan Your ID</h3>
+                                <p>Use QR code, ID card, or enter manually</p>
+                                <div class="scanner-instructions" style="font-size: 0.875rem; color: var(--muted-foreground); margin-top: 0.5rem;">
+                                    <strong>QR Scanner:</strong> Click "Start QR Scanner", allow camera permissions, then position QR code in the frame.
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <div class="id-tabs">
+                                    <button class="id-tab active" onclick="switchIdTab('qr')">📱 QR Code</button>
+                                    <button class="id-tab" onclick="switchIdTab('card')">💳 ID Card</button>
+                                    <button class="id-tab" onclick="switchIdTab('manual')">Manual</button>
+                                </div>
+
+                                <!-- QR Scanner -->
+                                <div id="qr-scanner" class="id-tab-content active">
+                                    <div class="scanner-container">
+                                        <div id="qr-preview" class="scanner-preview hidden">
+                                            <video id="qr-video" class="scanner-video"></video>
+                                            <div class="scanner-overlay">
+                                                <div class="scan-region">
+                                                    <p>Position QR code in frame</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="qr-placeholder" class="scanner-placeholder">
+                                            <span class="qr-icon">📱</span>
+                                        </div>
+                                    </div>
+                                    <button id="start-qr" class="btn btn-primary" onclick="startQrScanning()">
+                                        📷 Start QR Scanner
+                                    </button>
+                                    <button id="stop-qr" class="btn btn-destructive hidden" onclick="stopQrScanning()">
+                                        ⏹️ Stop Scanning
+                                    </button>
+                                </div>
+
+                                <!-- Test QR Code Generator -->
+                                <div class="test-qr-section" style="margin-top: var(--spacing-4); padding: var(--spacing-4); background: var(--muted); border-radius: var(--radius);">
+                                    <h4 style="margin-bottom: var(--spacing-2); font-size: 0.875rem;">Test QR Code</h4>
+                                    <div style="display: flex; gap: var(--spacing-2); align-items: center;">
+                                        <input type="text" id="test-qr-input" placeholder="Enter test ID (e.g., EMP001)" class="manual-input" style="flex: 1; font-size: 0.875rem;">
+                                        <button class="btn btn-outline" onclick="generateTestQR()" style="font-size: 0.875rem; padding: var(--spacing-1) var(--spacing-3);">Generate</button>
+                                    </div>
+                                    <div id="test-qr-display" style="margin-top: var(--spacing-2); display: none;">
+                                        <canvas id="test-qr-canvas"></canvas>
+                                        <p style="font-size: 0.75rem; color: var(--muted-foreground); margin-top: var(--spacing-1);">Scan this QR code with the scanner above</p>
+                                    </div>
+                                </div>
+
+                                <!-- Card Scanner -->
+                                <div id="card-scanner" class="id-tab-content">
+                                    <div class="scanner-container">
+                                        <div class="scanner-placeholder">
+                                            <span class="card-icon">💳</span>
+                                            <div id="card-scanning" class="scanning-overlay hidden">
+                                                <div class="scanning-content">
+                                                    <div class="spinner"></div>
+                                                    <p>Scanning Card...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-camera" onclick="scanCard()">
+                                        💳 Scan ID Card
+                                    </button>
+                                </div>
+
+                                <!-- Manual Entry -->
+                                <div id="manual-entry" class="id-tab-content">
+                                    <div class="manual-input-container">
+                                        <input type="text" id="manual-id" placeholder="Enter your ID number" class="manual-input">
+                                    </div>
+                                    <button class="btn btn-success" onclick="submitManualId()">
+                                        Submit ID
+                                    </button>
+                                </div>
+
+                                <!-- Success State -->
+                                <div id="id-success" class="id-success hidden">
+                                    <div class="success-content">
+                                        <span class="success-icon">✅</span>
+                                        <h3>ID Verified!</h3>
+                                        <p id="verified-id">ID: </p>
+                                        <button class="btn btn-outline" onclick="resetIdScanner()">
+                                            ❌ Scan Another ID
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div id="dashboard-screen" class="screen">
+            <div class="container">
+                <!-- Dashboard Header -->
+                <div class="dashboard-header">
+                    <div class="header-content">
+                        <h1 class="dashboard-title">Attendance Dashboard</h1>
+                        <p class="dashboard-subtitle">Real-time attendance tracking - <span id="current-date"></span></p>
+                    </div>
+                    <button class="btn btn-outline" onclick="switchMode('home')">
+                        🔄 New Scan
+                    </button>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Total</span>
+                            <span class="stat-icon">👥</span>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="total-employees">50</div>
+                            <p class="stat-description">Registered employees</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Present</span>
+                            <span class="stat-icon success">✓</span>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value success" id="present-count">3</div>
+                            <p class="stat-description">+6% attendance</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Late</span>
+                            <span class="stat-icon warning">⏰</span>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value warning" id="late-count">1</div>
+                            <p class="stat-description">Arrived after 9:00 AM</p>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">Absent</span>
+                            <span class="stat-icon destructive">❌</span>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value destructive" id="absent-count">46</div>
+                            <p class="stat-description">Not marked yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="activity-card">
+                    <div class="activity-header">
+                        <h2>📊 Recent Check-ins</h2>
+                    </div>
+                    <div class="activity-content">
+                        <div id="attendance-records" class="records-list">
+                            <!-- Records will be populated by JavaScript -->
+                        </div>
+                        <div id="no-records" class="no-records">
+                            <div class="no-records-content">
+                                <span class="no-records-icon">⏰</span>
+                                <p>No attendance records yet today</p>
+                                <p class="no-records-description">Start scanning to track attendance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Summary Cards -->
+                <div class="summary-grid">
+                    <div class="summary-card gradient-secondary">
+                        <div class="summary-header">
+                            <h3>📅 Today's Summary</h3>
+                        </div>
+                        <div class="summary-content">
+                            <p>Check-in Rate: <span id="checkin-rate">8%</span></p>
+                            <p>On-time Rate: <span id="ontime-rate">75%</span></p>
+                            <p>Last Update: <span id="last-update"></span></p>
+                        </div>
+                    </div>
+
+                    <div class="summary-card gradient-primary">
+                        <div class="summary-header">
+                            <h3>📈 Trend Analysis</h3>
+                        </div>
+                        <div class="summary-content">
+                            <p>+5% vs Yesterday</p>
+                            <p>Peak Time: 8:30 AM</p>
+                            <p>Avg Check-in: 8:45 AM</p>
+                        </div>
+                    </div>
+
+                    <div class="summary-card gradient-success">
+                        <div class="summary-header">
+                            <h3>✅ System Status</h3>
+                        </div>
+                        <div class="summary-content">
+                            <p>✅ Face Recognition: Active</p>
+                            <p>✅ QR Scanner: Online</p>
+                            <p>✅ ID Reader: Ready</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Attendance Screen -->
+        <div id="my-attendance-screen" class="screen">
+            <div class="container">
+                <!-- Attendance History Header -->
+                <div class="dashboard-header">
+                    <div class="header-content">
+                        <h1 class="dashboard-title">My Attendance History</h1>
+                        <p class="dashboard-subtitle">View your attendance records for the past months</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="switchMode('home')">
+                        🔄 Back to Home
+                    </button>
+                </div>
+
+                <!-- Employee Selection -->
+                <div class="employee-selection-card">
+                    <div class="card-header">
+                        <h3>Select Employee</h3>
+                        <p>Choose your employee ID to view attendance history</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="employee-input-container">
+                            <input type="text" id="employee-id-input" placeholder="Enter your Employee ID" class="manual-input">
+                            <button class="btn btn-primary" onclick="loadEmployeeAttendance()">
+                                📊 View Attendance
+                            </button>
+                        </div>
+                        <div id="recent-employees" class="recent-employees hidden">
+                            <p>Recent employees:</p>
+                            <div class="recent-list" id="recent-list">
+                                <!-- Recent employees will be populated -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Last Month Attendance Records -->
+                <div id="attendance-summary" class="attendance-summary hidden">
+                    <div class="summary-header">
+                        <h2>📅 Last Month Attendance Records</h2>
+                        <p id="employee-name-display">Employee: </p>
+                    </div>
+
+                    <!-- Attendance Records -->
+                    <div class="detailed-records">
+                        <div id="employee-records" class="records-list">
+                            <!-- Employee records will be populated -->
+                        </div>
+                        <div id="no-employee-records" class="no-records">
+                            <div class="no-records-content">
+                                <span class="no-records-icon">⏰</span>
+                                <p>No attendance records found for the last month</p>
+                                <p class="no-records-description">Try a different employee ID or check if records exist</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate QR Screen -->
+        <div id="generate-qr-screen" class="screen">
+            <div class="container">
+                <!-- QR Generation Header -->
+                <div class="dashboard-header">
+                    <div class="header-content">
+                        <h1 class="dashboard-title">Generate QR Codes</h1>
+                        <p class="dashboard-subtitle">Create unique QR codes for registered users</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="switchMode('home')">
+                        🔄 Back to Home
+                    </button>
+                </div>
+
+                <!-- User Selection -->
+                <div class="employee-selection-card">
+                    <div class="card-header">
+                        <h3>Select User</h3>
+                        <p>Choose a registered user to generate their QR code</p>
+                    </div>
+                    <div class="card-content">
+                        <div class="user-list" id="user-list">
+                            <!-- Users will be populated -->
+                        </div>
+                        <div id="no-users" class="no-records hidden">
+                            <div class="no-records-content">
+                                <span class="no-records-icon">👥</span>
+                                <p>No registered users found</p>
+                                <p class="no-records-description">Register users first to generate QR codes</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR Display -->
+                <canvas id="user-qr-canvas" style="display: none;"></canvas>
+                <div id="qr-display-section" class="qr-display-section hidden">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 id="qr-user-name">QR Code for </h3>
+                            <p>Scan this QR code to mark attendance</p>
+                        </div>
+                        <div class="card-content">
+                            <div class="qr-display-container">
+                                <img id="user-qr-image" alt="QR Code" style="border-radius: var(--radius-lg); box-shadow: var(--shadow-card);">
+                                <div class="qr-info">
+                                    <p><strong>Employee ID:</strong> <span id="qr-employee-id"></span></p>
+                                    <p><strong>Name:</strong> <span id="qr-name"></span></p>
+                                    <button class="btn btn-outline" onclick="downloadQR()">
+                                        📥 Download QR Code
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast-container" class="toast-container"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
